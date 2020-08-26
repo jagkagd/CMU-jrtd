@@ -1,0 +1,15 @@
+*.o
+echo_client
+example
+lex.yy.c
+lex.yy.h
+*.bak
+y.tab.h
+y.tab.c
+*.output
+sample_request_example
+sample_request_realistic
+liso_server
+.vscode/
+*.json
+echo_server
