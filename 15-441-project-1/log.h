@@ -18,7 +18,7 @@ int init_log();
 
 void get_time(char *time);
 
-void get_ipadress(int sockfd, struct sockaddr_in *cli_addr, socklen_t *addrlen);
+void get_ipadress(int sockfd, char *ip_addr, uint *port);
 
 void dump_error(int sockfd, const char *msg);
 
