@@ -5,6 +5,9 @@ int init_log(){
         fprintf(stderr, "[ERROR] log file can not be created!");
         return EXIT_FAILURE;
     }
+    char *time_fmt;
+    get_time(time_fmt);
+    fprintf(fp, "Liso %s", time_fmt);
     return EXIT_SUCCESS;
 }
 
