@@ -7,22 +7,22 @@
 
 #define MAX_BUF 4096
 
-void get_head_status_code(Request *request, struct response_info *info);
-void get_get_status_code(Request *request, struct response_info *info);
-void get_post_status_code(Request *request, struct response_info *info);
+void get_head_status_code(Request* request, struct response_info* info);
+void get_get_status_code(Request* request, struct response_info* info);
+void get_post_status_code(Request* request, struct response_info* info);
 
-void get_status_code(Request *request, struct response_info *info);
+void get_status_code(Request* request, struct response_info* info);
 
-void get_head_status_code(Request *request, struct response_info *info);
+void get_head_status_code(Request* request, struct response_info *info);
 
-void get_get_status_code(Request *request, struct response_info *info);
+void get_get_status_code(Request* request, struct response_info *info);
 
-int check_source_match(Request *request);
+int check_source_match(Request* request);
 
-int check_required_length(Request *request);
+int check_required_length(Request* request);
 
-int check_http_version(Request *request);
+int check_http_version(Request* request);
 
-char *get_header_field(Request *request, const char *header);
+void get_header_field(Request* request, const char* header, char* value);
 
-int get_souce_path(Request *request, char *fp);
+int get_souce_path(Request* request, char* fp);

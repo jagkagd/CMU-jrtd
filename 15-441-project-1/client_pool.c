@@ -88,7 +88,6 @@ int fd_set_init(fd_set *fd_read, int sock, int *clients)
         if (clients[i] != NO_SOCKET)
         {
             FD_SET(clients[i], fd_read);
-            // fprintf(stdout, "set clients %i\n", clients[i]);
             if (clients[i] > max_fd)
             {
                 max_fd = clients[i];
@@ -100,17 +99,11 @@ int fd_set_init(fd_set *fd_read, int sock, int *clients)
 
 int handle_client_recv(int client_sock)
 {
-    // fprintf(stdout, "[%i] handle.\n", client_sock);
     ssize_t readret = 0;
     char buf[BUF_SIZE];
     memset(buf, 0, BUF_SIZE);
     if ((readret = recv(client_sock, buf, BUF_SIZE, 0)) == -1)
     {
-        // fprintf(stdout, "[%i] Received lenth = %li \nmsg: %s\n", client_sock, readret, buf);
-        // if (recv_trmn(buf, readret))
-        // {
-        //     break;
-        // }
         close_socket(client_sock);
         fprintf(stderr, "Error reading from client socket.\n");
         return EXIT_FAILURE;
@@ -137,15 +130,8 @@ int handle_client_recv(int client_sock)
     }
     else
     {
-        // buf[readret] = '\0';
-        if (send(client_sock, buf, readret, 0) != readret)
-        {
-            close_socket(client_sock);
-            fprintf(stderr, "error sending to client.\n");
-            return EXIT_FAILURE;
-        }
+        handle_HTTP_request(request);
         fprintf(stdout, "[%i] Send:\n", client_sock);
-        print_detail(buf, readret);
     }
     memset(buf, 0, BUF_SIZE);
     fprintf(stdout, "\n");
