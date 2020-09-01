@@ -27,13 +27,18 @@ void get_time(char *time_str) {
     strftime(time_str, 100, "%d/%b/%Y:%T %z", timeinfo);
 }
 
-void dump_error(int sockfd, const char *msg){
+void dump_error(int sockfd, const char *msg, ...){
     char *time_fmt;
     get_time(time_fmt);
     char ip_addr[INET_ADDRSTRLEN];
     uint port;
     get_ipadress(sockfd, ip_addr, &port);
-    fprintf(fp, "[%s] [error] [client %s:%d] %s", time_fmt, ip_addr, port, msg);
+    va_list(args);
+    va_start(args, msg);
+    char error_msg[4096];
+    fprintf(error_msg, msg, args);
+    va_end(args);
+    fprintf(fp, "[%s] [error] [client %s:%d] %s", time_fmt, ip_addr, port, error_msg);
 }
 
 void dump_common(int sockfd, const char *request, int status_code, int size){

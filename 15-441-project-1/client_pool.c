@@ -130,7 +130,7 @@ int handle_client_recv(int client_sock)
     }
     else
     {
-        handle_HTTP_request(request);
+        handle_HTTP_request(client_sock, request);
         fprintf(stdout, "[%i] Send:\n", client_sock);
     }
     memset(buf, 0, BUF_SIZE);

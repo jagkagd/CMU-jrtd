@@ -1,6 +1,6 @@
 CC=gcc
 CFLAGS=-I.
-DEPS = request_header.h lex.yy.h y.tab.h parse.h liso_server.h utils.h client_pool.h
+DEPS = global.h log.h request_header.h lex.yy.h y.tab.h parse.h liso_server.h utils.h client_pool.h handle_HTTP_request.h
 OBJ = y.tab.o lex.yy.o parse.o example.o
 FLAGS = -g -Wall
 
@@ -21,7 +21,7 @@ example: $(OBJ)
 	$(CC) -g -o $@ $^ $(CFLAGS)
 
 liso_server:
-	$(CC) liso_server.c utils.c client_pool.c parse.c y.tab.c lex.yy.c -g -o liso_server ## -Wall -Werror
+	$(CC) liso_server.c log.c utils.c client_pool.c parse.c y.tab.c lex.yy.c handle_HTTP_request.c -g -o liso_server ## -Wall -Werror
 
 echo_client:
 	$(CC) echo_client.c -o echo_client -Wall -Werror

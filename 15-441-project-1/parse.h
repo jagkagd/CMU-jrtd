@@ -7,6 +7,7 @@
 #include "request_header.h"
 #include "y.tab.h"
 #include "lex.yy.h"
+#include "global.h"
 
 //Header field
 

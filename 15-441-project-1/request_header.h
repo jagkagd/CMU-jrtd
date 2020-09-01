@@ -1,6 +1,8 @@
 #ifndef __REQUEST_HEADER_H__
 #define __REQUEST_HEADER_H__
 
+#include "global.h"
+
 typedef struct
 {
 	char header_name[4096];
