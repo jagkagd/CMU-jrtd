@@ -29,11 +29,7 @@ void get_status_code(Request *request, Response_info *info)
 
 void get_head_status_code(Request *request, Response_info *info)
 {
-    if (check_required_length(request) != 0)
-    {
-        info->code = 411;
-    }
-    else if (check_http_version(request) != 0)
+    if (check_http_version(request) != 0)
     {
         info->code = 505;
     }
@@ -45,15 +41,11 @@ void get_head_status_code(Request *request, Response_info *info)
 
 void get_get_status_code(Request *request, Response_info *info)
 {
-    if (check_source_match(request) != 0)
+    if (!check_source_match(request))
     {
         info->code = 404;
     }
-    else if (check_required_length(request) != 0)
-    {
-        info->code = 411;
-    }
-    else if (check_http_version(request) != 0)
+    else if (!check_http_version(request))
     {
         info->code = 505;
     }
@@ -87,19 +79,19 @@ int check_source_match(Request *request)
 {
     char fp[MAX_BUF];
     get_source_path(request, fp);
-    return access(fp, R_OK);
+    return access(fp, F_OK) == 0;
 }
 
 int check_required_length(Request *request)
 {
-    char *value[MAX_BUF];
+    char value[MAX_BUF];
     get_header_field(request, "Content-Length", value);
     return (strcmp(value, "") != 0);
 }
 
 int check_http_version(Request *request)
 {
-    return atof(request->http_version) > 1.1;
+    return atof(request->http_version) == 1.1;
 }
 
 void get_header_field(Request *request, const char *header, char *value)
@@ -121,10 +113,11 @@ void get_header_field(Request *request, const char *header, char *value)
 
 void get_source_path(Request *request, char *fp)
 {
+    strcpy(fp, ".");
     strcat(fp, request->http_uri);
 }
 
-void handle_response_info(int sockfd, Response_info *info, Request *request)
+void handle_response_info(int sockfd, Request *request, Response_info *info)
 {
     char response[MAX_BUF];
     switch (info->code)
@@ -132,24 +125,26 @@ void handle_response_info(int sockfd, Response_info *info, Request *request)
     case 200:
         if (strcmp(request->http_method, "POST") == 0)
         {
-            fprintf(response, HTTP_VERSION" 200 OK\r\n");
+            sprintf(response, HTTP_VERSION " 200 OK\r\n");
         }
         else
         {
             char mime_type[64];
-            get_mime_type(info->fp, mime_type);
-            int content_length = get_content_length(info->fp);
+            char fp[MAX_BUF];
+            get_source_path(request, fp);
+            get_mime_type(fp, mime_type);
+            int content_length = get_content_length(fp);
             char curr_time[256], last_modified_time[256];
             get_curr_time(curr_time);
-            get_last_modified_time(info->fp, last_modified_time);
+            get_last_modified_time(fp, last_modified_time);
             char connection_type[16];
             get_connection_type(request, connection_type);
-            fprintf(response,
+            sprintf(response,
                     HTTP_VERSION
                     " 200 OK\r\n"
                     "Server: "SERVER_NAME"\r\n"
                     "Date: %s\r\n"
-                    "Content-Length: %s\r\n"
+                    "Content-Length: %d\r\n"
                     "Content-type: %s\r\n"
                     "Last-modified: %s\r\n"
                     "Connection: %s\r\n"
@@ -162,32 +157,39 @@ void handle_response_info(int sockfd, Response_info *info, Request *request)
             send_response(sockfd, response, strlen(response));
             if (strcmp(request->http_method, "GET") == 0)
             {
-                send_file(sockfd, info->fp);
+                send_file(sockfd, fp);
             }
+            return;
         }
-        break;
     case 404:
-        fprintf(response, HTTP_VERSION" 404 Bad request\r\n");
+        sprintf(response, HTTP_VERSION " 404 Bad request\r\n");
         break;
     case 411:
-        fprintf(response, HTTP_VERSION" 411 Length Required\r\n");
+        sprintf(response, HTTP_VERSION " 411 Length Required\r\n");
         break;
     case 501:
-        fprintf(response, HTTP_VERSION" 501 Not Implemented\r\n\r\n");
+        sprintf(response, HTTP_VERSION " 501 Not Implemented\r\n\r\n");
         break;
     case 505:
-        fprintf(response, HTTP_VERSION" 505 HTTP Version not supported\r\n");
+        sprintf(response, HTTP_VERSION " 505 HTTP Version not supported\r\n");
+        break;
+    default:
+        dump_error(sockfd, "Error status code %d.", info->code);
+        return;
     }
+    send_response(sockfd, response, strlen(response));
+    return;
 }
 
 void get_mime_type(char *fp, char *mime_type)
 {
-    char *mime = strrchr(fp, '.');
-    if (mime == NULL)
+    char *mime0 = strrchr(fp, '.');
+    if (mime0 == NULL)
     {
         strcpy(mime_type, "application/octet-stream");
         return;
     }
+    char *mime = mime0 + 1;
     if (!strcmp(mime, "html"))
     {
         strcpy(mime_type, "text/html");
@@ -217,14 +219,26 @@ void get_connection_type(Request *request, char *connection_type)
     return;
 }
 
-int send_response(int sockfd, char *response, int response_len)
+int send_response(int sockfd, char *response, size_t response_len)
 {
-    if (send(sockfd, response, response_len, 0) != response_len)
+    size_t nleft = response_len;
+    size_t nsend = 0;
+    size_t nret = 0;
+    while(nleft > 0)
     {
-        close_socket(sockfd);
-        fprintf(stderr, "error sending to client.\n");
-        return EXIT_FAILURE;
+        if ((nret = send(sockfd, response + nsend, response_len, 0)) < 0){
+            if (nret < 0 && errno == EINTR){
+                nret = 0;
+            } else {
+                close_socket(sockfd);
+                dump_error(sockfd, "error sending to client.\n");
+                return -1;
+            }
+        }
+        nleft -= nret;
+        nsend += nret;
     }
+    return nsend;
 }
 
 int send_file(int sockfd, char *fp)

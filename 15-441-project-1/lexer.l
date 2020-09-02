@@ -220,6 +220,12 @@ token_char      [\x0-\x7f]{-}[\x0-\x1f\x7f]{-}[\{\}\(\)\<\>@\,;:\\\"/\[\]?=\x20\
 	return t_ctl;
 }
 
+"HTTP/" {
+	LPRINTF("t:HTTP/\n");
+	strcpy(yylval->str, yytext);
+	return t_version_header;
+}
+
 %%
 
 /* int yywrap(void) {

@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/sendfile.h>
 #include <time.h>
+#include <errno.h>
 #include "log.h"
 #include "request_header.h"
 #include "global.h"
@@ -27,9 +28,7 @@ void get_post_status_code(Request* request, Response_info* info);
 
 void get_status_code(Request* request, Response_info* info);
 
-void get_head_status_code(Request* request, Response_info *info);
-
-void get_get_status_code(Request* request, Response_info *info);
+void handle_response_info(int sockfd, Request *request, Response_info *info);
 
 int check_source_match(Request* request);
 
@@ -42,5 +41,7 @@ void get_header_field(Request* request, const char* header, char* value);
 void get_source_path(Request* request, char* fp);
 
 int get_content_length(const char* fp);
+
+int send_response(int sockfd, char *response, size_t len);
 
 #endif

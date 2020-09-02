@@ -13,3 +13,5 @@ liso_server
 .vscode/
 *.json
 echo_server
+testt.c
+a.out
